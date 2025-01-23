@@ -74,7 +74,7 @@ class _OtpScreenState extends State<OtpScreen> {
       await _authService.verifyOtp(widget.verificationId, otpController.text);
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => const HomeScreen()),
+        MaterialPageRoute(builder: (context) => HomeScreen()),
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
