@@ -1,12 +1,16 @@
 import 'package:flutter/material.dart';
-
 import '../services/auth_service.dart';
-import 'home_screen.dart';
+import 'profile_creation_screen.dart';
 
 class OtpScreen extends StatefulWidget {
   final String verificationId;
+  final String phoneNumber; // Add phone number
 
-  const OtpScreen({Key? key, required this.verificationId}) : super(key: key);
+  const OtpScreen({
+    Key? key,
+    required this.verificationId,
+    required this.phoneNumber, // Add phone number
+  }) : super(key: key);
 
   @override
   State<OtpScreen> createState() => _OtpScreenState();
@@ -51,7 +55,7 @@ class _OtpScreenState extends State<OtpScreen> {
                     onPressed: verifyOtp,
                     child: const Text(
                       "Verify OTP",
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white,),
                     ),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.greenAccent,
@@ -74,7 +78,11 @@ class _OtpScreenState extends State<OtpScreen> {
       await _authService.verifyOtp(widget.verificationId, otpController.text);
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => HomeScreen()),
+        MaterialPageRoute(
+          builder: (context) => ProfileCreationScreen(
+            phoneNumber: widget.phoneNumber, // Pass phone number
+          ),
+        ),
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(

@@ -64,7 +64,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     onPressed: sendPhoneNumber,
                     child: const Text(
                       "Proceed",
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white,),
                     ),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.greenAccent,
@@ -97,7 +97,10 @@ class _LoginScreenState extends State<LoginScreen> {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => OtpScreen(verificationId: verificationId),
+            builder: (context) => OtpScreen(
+              verificationId: verificationId,
+              phoneNumber: phoneNumber, // Pass phone number
+            ),
           ),
         );
       },
