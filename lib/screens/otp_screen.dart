@@ -1,15 +1,18 @@
 import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
 import 'profile_creation_screen.dart';
+import 'home_screen.dart'; // Add the HomeScreen import
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class OtpScreen extends StatefulWidget {
   final String verificationId;
-  final String phoneNumber; // Add phone number
+  final String phoneNumber;
 
   const OtpScreen({
     Key? key,
     required this.verificationId,
-    required this.phoneNumber, // Add phone number
+    required this.phoneNumber,
   }) : super(key: key);
 
   @override
@@ -55,7 +58,7 @@ class _OtpScreenState extends State<OtpScreen> {
                     onPressed: verifyOtp,
                     child: const Text(
                       "Verify OTP",
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white,),
+                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
                     ),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.greenAccent,
@@ -75,15 +78,40 @@ class _OtpScreenState extends State<OtpScreen> {
 
   void verifyOtp() async {
     try {
+      // Verify OTP with Firebase
       await _authService.verifyOtp(widget.verificationId, otpController.text);
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (context) => ProfileCreationScreen(
-            phoneNumber: widget.phoneNumber, // Pass phone number
-          ),
-        ),
+
+      // Now, check if the user exists in the database
+      final response = await http.get(
+        Uri.parse('http://192.168.0.102:3000/check-auth/${widget.phoneNumber}'),
       );
+
+      if (response.statusCode == 200) {
+        // User exists in the database, navigate to the HomeScreen
+        final data = json.decode(response.body);
+        if (data['auth'] == 'yes') {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => HomeScreen()),  // Navigate to Home Screen
+          );
+        } else {
+          // User exists but not authenticated, navigate to Profile Creation Screen
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => ProfileCreationScreen(phoneNumber: widget.phoneNumber),
+            ),
+          );
+        }
+      } else {
+        // User does not exist, navigate to Profile Creation Screen
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ProfileCreationScreen(phoneNumber: widget.phoneNumber),
+          ),
+        );
+      }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Invalid OTP")),

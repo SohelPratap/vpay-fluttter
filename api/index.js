@@ -56,28 +56,28 @@ app.post('/save-profile', (req, res) => {
     });
 });
 
-// Check if user is authenticated
+// Route to check if user exists and their authentication status
 app.get('/check-auth/:phoneNumber', (req, res) => {
-    const phoneNumber = req.params.phoneNumber;
+  const phoneNumber = req.params.phoneNumber;
 
-    // Query the profiles table to check the auth status
-    const query = `SELECT auth FROM profiles WHERE phone_number = ?`;
+  const query = `SELECT * FROM profiles WHERE phone_number = ?`;
 
-    db.query(query, [phoneNumber], (err, result) => {
-        if (err) {
-            console.error('Error checking auth status:', err);
-            return res.status(500).json({ error: 'Failed to check authentication status.' });
-        }
+  db.query(query, [phoneNumber], (err, results) => {
+    if (err) {
+      console.error('Error checking user authentication:', err);
+      return res.status(500).json({ error: 'Failed to check authentication status' });
+    }
 
-        if (result.length > 0) {
-            const authStatus = result[0].auth;
-            return res.status(200).json({ auth: authStatus });
-        } else {
-            return res.status(404).json({ error: 'User not found.' });
-        }
-    });
+    if (results.length > 0) {
+      // User exists, check auth status
+      const user = results[0];
+      res.status(200).json({ auth: user.auth });
+    } else {
+      // User does not exist in the database
+      res.status(404).json({ error: 'User not found' });
+    }
+  });
 });
-
 // Start the server on all network interfaces
 app.listen(PORT, '0.0.0.0', () => {
     console.log(`Server running on http://0.0.0.0:${PORT}`);
