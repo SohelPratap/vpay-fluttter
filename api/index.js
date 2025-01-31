@@ -56,6 +56,28 @@ app.post('/save-profile', (req, res) => {
     });
 });
 
+// Check if user is authenticated
+app.get('/check-auth/:phoneNumber', (req, res) => {
+    const phoneNumber = req.params.phoneNumber;
+
+    // Query the profiles table to check the auth status
+    const query = `SELECT auth FROM profiles WHERE phone_number = ?`;
+
+    db.query(query, [phoneNumber], (err, result) => {
+        if (err) {
+            console.error('Error checking auth status:', err);
+            return res.status(500).json({ error: 'Failed to check authentication status.' });
+        }
+
+        if (result.length > 0) {
+            const authStatus = result[0].auth;
+            return res.status(200).json({ auth: authStatus });
+        } else {
+            return res.status(404).json({ error: 'User not found.' });
+        }
+    });
+});
+
 // Start the server on all network interfaces
 app.listen(PORT, '0.0.0.0', () => {
     console.log(`Server running on http://0.0.0.0:${PORT}`);
