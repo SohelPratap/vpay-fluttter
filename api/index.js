@@ -78,6 +78,34 @@ app.get('/check-auth/:phoneNumber', (req, res) => {
     }
   });
 });
+
+// Route to fetch user profile details based on phone number
+app.get('/fetch-profile/:phoneNumber', (req, res) => {
+  const phoneNumber = decodeURIComponent(req.params.phoneNumber); // Decode the phone number
+
+  const query = `SELECT phone_number, name, email FROM profiles WHERE phone_number = ?`;
+
+  db.query(query, [phoneNumber], (err, results) => {
+    if (err) {
+      console.error('Error fetching user profile:', err);
+      return res.status(500).json({ error: 'Failed to fetch profile' });
+    }
+
+    if (results.length > 0) {
+      // User exists, send back their profile
+      const user = results[0];
+      res.status(200).json({
+        phoneNumber: user.phone_number,
+        name: user.name,
+        email: user.email
+      });
+    } else {
+      // User does not exist in the database
+      res.status(404).json({ error: 'User not found' });
+    }
+  });
+});
+
 // Start the server on all network interfaces
 app.listen(PORT, '0.0.0.0', () => {
     console.log(`Server running on http://0.0.0.0:${PORT}`);
