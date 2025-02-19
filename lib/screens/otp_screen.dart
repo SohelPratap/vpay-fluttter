@@ -1,9 +1,10 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
 import 'profile_creation_screen.dart';
 import 'home_screen.dart'; // Add the HomeScreen import
 import 'package:http/http.dart' as http;
-import 'dart:convert';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class OtpScreen extends StatefulWidget {
   final String verificationId;
@@ -81,19 +82,46 @@ class _OtpScreenState extends State<OtpScreen> {
       // Verify OTP with Firebase
       await _authService.verifyOtp(widget.verificationId, otpController.text);
 
+      // Encode phone number for URL to handle special characters like +
+      String encodedPhoneNumber = Uri.encodeComponent(widget.phoneNumber);
+
       // Now, check if the user exists in the database
       final response = await http.get(
-        Uri.parse('http://192.168.0.102:3000/check-auth/${widget.phoneNumber}'),
+        Uri.parse('http://192.168.0.117:3000/check-auth/$encodedPhoneNumber'),
       );
 
       if (response.statusCode == 200) {
         // User exists in the database, navigate to the HomeScreen
         final data = json.decode(response.body);
         if (data['auth'] == 'yes') {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => HomeScreen()),  // Navigate to Home Screen
+          // Fetch profile details from the server
+          final profileResponse = await http.get(
+            Uri.parse('http://192.168.0.117:3000/fetch-profile/$encodedPhoneNumber'),
           );
+
+          if (profileResponse.statusCode == 200) {
+            final profileData = json.decode(profileResponse.body);
+
+            // Store the login status and user info in SharedPreferences
+            SharedPreferences prefs = await SharedPreferences.getInstance();
+            await prefs.setBool('is_logged_in', true); // Set login status to true
+            await prefs.setString('user_phone', widget.phoneNumber); // Store phone number
+            await prefs.setString('user_name', profileData['name'] ?? ''); // Correct key
+            await prefs.setString('user_email', profileData['email'] ?? ''); // Store user email (if available)
+
+            // Navigate to the HomeScreen
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                builder: (context) => HomeScreen(),
+              ),
+            );
+          } else {
+            // Handle error in fetching profile
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text("Error fetching profile")),
+            );
+          }
         } else {
           // User exists but not authenticated, navigate to Profile Creation Screen
           Navigator.pushReplacement(

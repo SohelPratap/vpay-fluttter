@@ -1,24 +1,61 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:provider/provider.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'make_payment_page.dart';
 import 'check_balance_page.dart';
 import 'add_bank_page.dart';
 import 'history_page.dart';
-import 'profile_page.dart'; // Import the ProfilePage
+import 'profile_page.dart';
+import '../language_provider.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
+  @override
+  _HomeScreenState createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+  String userName = "User";
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserName();
+  }
+
+  Future<void> _loadUserName() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    setState(() {
+      userName = prefs.getString('user_name') ?? "User";
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      key: _scaffoldKey,
       appBar: AppBar(
-        leading: IconButton(
-          icon: Icon(Icons.qr_code_scanner, size: 35),
-          onPressed: () {
-            // Add functionality for QR code scanner
-          },
+        leading: Row(
+          children: [
+            IconButton(
+              icon: Icon(Icons.menu, size: 30),
+              onPressed: () {
+                _scaffoldKey.currentState?.openDrawer();
+              },
+            ),
+            IconButton(
+              icon: Icon(Icons.qr_code_scanner, size: 30),
+              onPressed: () {
+                // QR scanner functionality
+              },
+            ),
+          ],
         ),
         title: Text(
           'Voice Pay',
-          style: TextStyle(color: Colors.transparent), // Visually hidden
+          style: TextStyle(color: Colors.transparent), // Hidden for center alignment
         ),
         centerTitle: true,
         actions: [
@@ -33,6 +70,37 @@ class HomeScreen extends StatelessWidget {
           ),
         ],
       ),
+
+      // Language Selection Drawer
+      drawer: Drawer(
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: [
+            DrawerHeader(
+              decoration: BoxDecoration(color: Colors.blue),
+              child: Text(
+                "Select Language",
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
+              ),
+            ),
+            ListTile(
+              title: Text("English"),
+              onTap: () {
+                context.read<LanguageProvider>().changeLanguage('en');
+                Navigator.pop(context);
+              },
+            ),
+            ListTile(
+              title: Text("हिन्दी"),
+              onTap: () {
+                context.read<LanguageProvider>().changeLanguage('hi');
+                Navigator.pop(context);
+              },
+            ),
+          ],
+        ),
+      ),
+
       body: SingleChildScrollView(
         child: Center(
           child: Column(
@@ -40,8 +108,8 @@ class HomeScreen extends StatelessWidget {
             children: [
               SizedBox(height: 16),
               Text(
-                'Welcome to Voice Pay',
-                style: TextStyle(fontSize: 22, fontWeight: FontWeight.normal),
+                '${AppLocalizations.of(context)!.welcome}, $userName 👋',
+                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
                 textAlign: TextAlign.center,
               ),
               SizedBox(height: 16),
@@ -55,13 +123,13 @@ class HomeScreen extends StatelessWidget {
                 ),
               ),
               Text(
-                'Ab Payment Karo Apni Awaz Se',
+                AppLocalizations.of(context)!.note,
                 style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                 textAlign: TextAlign.center,
               ),
               SizedBox(height: 20),
               PaymentButton(
-                label: 'Make Payment',
+                label: AppLocalizations.of(context)!.make_payment,
                 icon: Icons.payment,
                 onTap: () {
                   Navigator.push(
@@ -71,7 +139,7 @@ class HomeScreen extends StatelessWidget {
                 },
               ),
               PaymentButton(
-                label: 'Check Balance',
+                label: AppLocalizations.of(context)!.check_balance,
                 icon: Icons.account_balance_wallet,
                 onTap: () {
                   Navigator.push(
@@ -81,7 +149,7 @@ class HomeScreen extends StatelessWidget {
                 },
               ),
               PaymentButton(
-                label: 'Add Bank',
+                label: AppLocalizations.of(context)!.add_bank,
                 icon: Icons.account_balance,
                 onTap: () {
                   Navigator.push(
@@ -91,7 +159,7 @@ class HomeScreen extends StatelessWidget {
                 },
               ),
               PaymentButton(
-                label: 'History',
+                label: AppLocalizations.of(context)!.history,
                 icon: Icons.history,
                 onTap: () {
                   Navigator.push(
