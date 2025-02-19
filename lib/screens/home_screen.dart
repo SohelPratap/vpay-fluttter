@@ -39,17 +39,19 @@ class _HomeScreenState extends State<HomeScreen> {
       appBar: AppBar(
         leading: Row(
           children: [
-            IconButton(
+            Expanded(child: IconButton(
               icon: Icon(Icons.menu, size: 30),
               onPressed: () {
                 _scaffoldKey.currentState?.openDrawer();
               },
             ),
-            IconButton(
+            ),
+            Expanded(child: IconButton(
               icon: Icon(Icons.qr_code_scanner, size: 30),
               onPressed: () {
                 // QR scanner functionality
               },
+            ),
             ),
           ],
         ),
