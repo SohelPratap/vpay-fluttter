@@ -7,8 +7,10 @@ import 'make_payment_page.dart';
 import 'check_balance_page.dart';
 import 'add_bank_page.dart';
 import 'history_page.dart';
+import 'add_bank_page.dart';
 import 'profile_page.dart';
 import '../language_provider.dart';
+import '../features/call_feature.dart';  // Import CallFeature
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -18,17 +20,35 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   String userName = "User";
+  bool isFraudWarningEnabled = true; // Default enabled
+  late CallFeature _callFeature;
 
   @override
   void initState() {
     super.initState();
     _loadUserName();
+    _callFeature = CallFeature();
+    _loadFraudWarningState();
   }
 
   Future<void> _loadUserName() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     setState(() {
       userName = prefs.getString('user_name') ?? "User";
+    });
+  }
+
+  Future<void> _loadFraudWarningState() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    setState(() {
+      isFraudWarningEnabled = prefs.getBool('call_warning_enabled') ?? true;
+    });
+  }
+
+  Future<void> _toggleFraudWarning(bool value) async {
+    await _callFeature.toggleWarning(value);
+    setState(() {
+      isFraudWarningEnabled = value;
     });
   }
 
@@ -39,25 +59,27 @@ class _HomeScreenState extends State<HomeScreen> {
       appBar: AppBar(
         leading: Row(
           children: [
-            Expanded(child: IconButton(
-              icon: Icon(Icons.menu, size: 30),
-              onPressed: () {
-                _scaffoldKey.currentState?.openDrawer();
-              },
+            Expanded(
+              child: IconButton(
+                icon: Icon(Icons.menu, size: 30),
+                onPressed: () {
+                  _scaffoldKey.currentState?.openDrawer();
+                },
+              ),
             ),
-            ),
-            Expanded(child: IconButton(
-              icon: Icon(Icons.qr_code_scanner, size: 30),
-              onPressed: () {
-                // QR scanner functionality
-              },
-            ),
+            Expanded(
+              child: IconButton(
+                icon: Icon(Icons.qr_code_scanner, size: 30),
+                onPressed: () {
+                  // QR scanner functionality
+                },
+              ),
             ),
           ],
         ),
         title: Text(
           'Voice Pay',
-          style: TextStyle(color: Colors.transparent), // Hidden for center alignment
+          style: TextStyle(color: Colors.transparent),
         ),
         centerTitle: true,
         actions: [
@@ -73,7 +95,7 @@ class _HomeScreenState extends State<HomeScreen> {
         ],
       ),
 
-      // Language Selection Drawer
+      // Drawer with Language Selection & Fraud Warning Toggle
       drawer: Drawer(
         child: ListView(
           padding: EdgeInsets.zero,
@@ -81,7 +103,7 @@ class _HomeScreenState extends State<HomeScreen> {
             DrawerHeader(
               decoration: BoxDecoration(color: Colors.blue),
               child: Text(
-                "Select Language",
+                "Settings",
                 style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
               ),
             ),
@@ -98,6 +120,12 @@ class _HomeScreenState extends State<HomeScreen> {
                 context.read<LanguageProvider>().changeLanguage('hi');
                 Navigator.pop(context);
               },
+            ),
+            Divider(),
+            SwitchListTile(
+              title: Text("Fraud Call Warning"),
+              value: isFraudWarningEnabled,
+              onChanged: _toggleFraudWarning,
             ),
           ],
         ),

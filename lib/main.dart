@@ -4,14 +4,22 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 import 'screens/login_screen.dart';
 import 'screens/home_screen.dart';
-import 'language_provider.dart';  // Import LanguageProvider
+import 'language_provider.dart';
+import 'features/call_feature.dart';  // Fraud Warning Feature
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();  // Initialize Firebase
+
+  // Request Permissions for Call Detection
+  await _requestPermissions();
+
+  // Start Call Monitoring
+  CallFeature();
 
   runApp(
     MultiProvider(
@@ -21,6 +29,13 @@ void main() async {
       child: const MyApp(),
     ),
   );
+}
+
+Future<void> _requestPermissions() async {
+  await [
+    Permission.phone,
+    Permission.microphone,
+  ].request();
 }
 
 class MyApp extends StatelessWidget {
