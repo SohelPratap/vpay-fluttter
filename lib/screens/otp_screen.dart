@@ -87,7 +87,7 @@ class _OtpScreenState extends State<OtpScreen> {
 
       // Now, check if the user exists in the database
       final response = await http.get(
-        Uri.parse('http://192.168.0.117:3000/check-auth/$encodedPhoneNumber'),
+        Uri.parse('http://192.168.0.101:3000/check-auth/$encodedPhoneNumber'),
       );
 
       if (response.statusCode == 200) {
@@ -96,7 +96,7 @@ class _OtpScreenState extends State<OtpScreen> {
         if (data['auth'] == 'yes') {
           // Fetch profile details from the server
           final profileResponse = await http.get(
-            Uri.parse('http://192.168.0.117:3000/fetch-profile/$encodedPhoneNumber'),
+            Uri.parse('http://192.168.0.101:3000/fetch-profile/$encodedPhoneNumber'),
           );
 
           if (profileResponse.statusCode == 200) {

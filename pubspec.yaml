@@ -70,6 +70,7 @@ flutter:
   assets:
     - assets/profile_picture.jpg
     - assets/voice_pay.jpg
+    - assets/Hey-V-pay_en_android_v3_0_0.ppn
 
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in
