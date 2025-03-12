@@ -11,7 +11,7 @@ class ProfileCreationScreen extends StatelessWidget {
 
   // Save profile data to server & SharedPreferences
   Future<void> saveProfile(String name, String email, BuildContext context) async {
-    final url = Uri.parse('http://192.168.0.101:3000/save-profile');
+    final url = Uri.parse('http://172.16.115.32:3000/save-profile');
 
     final response = await http.post(
       url,
