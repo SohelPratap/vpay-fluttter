@@ -13,12 +13,18 @@ import 'features/call_feature.dart';  // Fraud Warning Feature
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp();  // Initialize Firebase
 
-  // Request Permissions for Call Detection
+  // Initialize Firebase with error handling
+  try {
+    await Firebase.initializeApp();
+  } catch (e) {
+    debugPrint("🔥 Firebase initialization failed: $e");
+  }
+
+  // Request necessary permissions
   await _requestPermissions();
 
-  // Start Call Monitoring
+  // Initialize Call Feature (no need to call `initialize()`)
   CallFeature();
 
   runApp(
@@ -32,10 +38,15 @@ void main() async {
 }
 
 Future<void> _requestPermissions() async {
-  await [
+  Map<Permission, PermissionStatus> statuses = await [
     Permission.phone,
     Permission.microphone,
   ].request();
+
+  if (statuses[Permission.phone] != PermissionStatus.granted ||
+      statuses[Permission.microphone] != PermissionStatus.granted) {
+    debugPrint("⚠️ Warning: Phone or Microphone permission was denied.");
+  }
 }
 
 class MyApp extends StatelessWidget {
@@ -65,7 +76,9 @@ class MyApp extends StatelessWidget {
         future: _checkLoginStatus(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
+            return const Scaffold(
+              body: Center(child: CircularProgressIndicator()),
+            );
           } else if (snapshot.hasData && snapshot.data == true) {
             return HomeScreen();  // If logged in, go to HomeScreen
           } else {
