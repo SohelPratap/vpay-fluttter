@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:porcupine_flutter/porcupine_manager.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
 
@@ -12,10 +13,15 @@ class VoiceAssistant {
 
   Future<void> initializeWakeword(Function(String) onCommandRecognized) async {
     this.onCommandRecognized = onCommandRecognized;
+
+    // ✅ Load values from `.env`
+    final String accessKey = dotenv.env['PICOVOICE_ACCESS_KEY'] ?? '';
+    final String wakewordPath = dotenv.env['WAKEWORD_PATH'] ?? 'assets/Hey-V-pay_en_android_v3_0_0.ppn';
+
     try {
       _porcupineManager = await PorcupineManager.fromKeywordPaths(
-        "GhLV18gvmzPtVF+CDZviq2y3Pxn4hiDueHJ3qMEo/Je9Sd8e2S/GhA==", // Replace with Picovoice access key
-        ["assets/Hey-V-pay_en_android_v3_0_0.ppn"],
+        accessKey, // ✅ Use access key from .env
+        [wakewordPath], // ✅ Use wakeword path from .env
             (keywordIndex) {
           print("Wake Word Detected: Hey VPay");
           if (!_isListening) {
