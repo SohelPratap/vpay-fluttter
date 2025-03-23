@@ -1,8 +1,9 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../services/auth_service.dart';
 import 'profile_creation_screen.dart';
-import 'home_screen.dart'; // Add the HomeScreen import
+import 'home_screen.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -77,75 +78,58 @@ class _OtpScreenState extends State<OtpScreen> {
     );
   }
 
-
-
   void verifyOtp() async {
     try {
       // Verify OTP with Firebase
       await _authService.verifyOtp(widget.verificationId, otpController.text);
 
+      // Get API base URL from .env
+      final String apiBaseUrl = dotenv.env['API_BASE_URL'] ?? 'http://localhost:3000';
+
       // Encode phone number for URL to handle special characters like +
       String encodedPhoneNumber = Uri.encodeComponent(widget.phoneNumber);
 
-      // Now, check if the user exists in the database
-      final response = await http.get(
-        Uri.parse('http://192.168.0.101:3000/check-auth/$encodedPhoneNumber'),
-      );
+      // Check if the user exists in the database
+      final response = await http.get(Uri.parse('$apiBaseUrl/check-auth/$encodedPhoneNumber'));
 
       if (response.statusCode == 200) {
-        // User exists in the database, navigate to the HomeScreen
+        // User exists, navigate to HomeScreen
         final data = json.decode(response.body);
         if (data['auth'] == 'yes') {
           // Fetch profile details from the server
-          final profileResponse = await http.get(
-            Uri.parse('http://192.168.0.101:3000/fetch-profile/$encodedPhoneNumber'),
-          );
+          final profileResponse = await http.get(Uri.parse('$apiBaseUrl/fetch-profile/$encodedPhoneNumber'));
 
           if (profileResponse.statusCode == 200) {
             final profileData = json.decode(profileResponse.body);
 
-            // Store the login status and user info in SharedPreferences
+            // Store user info in SharedPreferences
             SharedPreferences prefs = await SharedPreferences.getInstance();
-            await prefs.setBool('is_logged_in', true); // Set login status to true
-            await prefs.setString('user_phone', widget.phoneNumber); // Store phone number
-            await prefs.setString('user_name', profileData['name'] ?? ''); // Correct key
-            await prefs.setString('user_email', profileData['email'] ?? ''); // Store user email (if available)
+            await prefs.setBool('is_logged_in', true);
+            await prefs.setString('user_phone', widget.phoneNumber);
+            await prefs.setString('user_name', profileData['name'] ?? '');
+            await prefs.setString('user_email', profileData['email'] ?? '');
 
-            // Navigate to the HomeScreen
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(
-                builder: (context) => HomeScreen(),
-              ),
-            );
+            // Navigate to HomeScreen
+            Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => HomeScreen()));
           } else {
-            // Handle error in fetching profile
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text("Error fetching profile")),
-            );
+            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Error fetching profile")));
           }
         } else {
-          // User exists but not authenticated, navigate to Profile Creation Screen
+          // User exists but not authenticated, go to Profile Creation
           Navigator.pushReplacement(
             context,
-            MaterialPageRoute(
-              builder: (context) => ProfileCreationScreen(phoneNumber: widget.phoneNumber),
-            ),
+            MaterialPageRoute(builder: (context) => ProfileCreationScreen(phoneNumber: widget.phoneNumber)),
           );
         }
       } else {
-        // User does not exist, navigate to Profile Creation Screen
+        // User doesn't exist, go to Profile Creation
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(
-            builder: (context) => ProfileCreationScreen(phoneNumber: widget.phoneNumber),
-          ),
+          MaterialPageRoute(builder: (context) => ProfileCreationScreen(phoneNumber: widget.phoneNumber)),
         );
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Invalid OTP")),
-      );
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Invalid OTP")));
     }
   }
 }

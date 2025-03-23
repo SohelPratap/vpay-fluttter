@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'home_screen.dart';  // Navigate to Home after profile creation
 
 class ProfileCreationScreen extends StatelessWidget {
@@ -11,7 +12,8 @@ class ProfileCreationScreen extends StatelessWidget {
 
   // Save profile data to server & SharedPreferences
   Future<void> saveProfile(String name, String email, BuildContext context) async {
-    final url = Uri.parse('http://172.16.115.32:3000/save-profile');
+    final String apiBaseUrl = dotenv.env['API_BASE_URL'] ?? 'http://localhost:3000';
+    final url = Uri.parse('$apiBaseUrl/save-profile');
 
     final response = await http.post(
       url,

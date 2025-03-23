@@ -7,7 +7,8 @@ class VoiceAssistant {
   PorcupineManager? _porcupineManager;
   final stt.SpeechToText _speech = stt.SpeechToText();
   bool _isListening = false;
-  Function(String)? onCommandRecognized; // Callback for commands
+  bool _isWakeWordActive = false;
+  Function(String)? onCommandRecognized; // Callback for voice commands
 
   Future<void> initializeWakeword(Function(String) onCommandRecognized) async {
     this.onCommandRecognized = onCommandRecognized;
@@ -17,17 +18,21 @@ class VoiceAssistant {
         ["assets/Hey-V-pay_en_android_v3_0_0.ppn"],
             (keywordIndex) {
           print("Wake Word Detected: Hey VPay");
-          startListening();
+          if (!_isListening) {
+            startListening();
+          }
         },
       );
 
       await _porcupineManager?.start();
+      _isWakeWordActive = true;
     } catch (e) {
-      print("Error initializing wakeword: $e");
+      print("Error initializing wake word detection: $e");
     }
   }
 
   Future<void> startListening() async {
+    if (_isListening) return; // Prevent multiple sessions
     bool available = await _speech.initialize(
       onStatus: (status) => print("Speech Status: $status"),
       onError: (error) => print("Speech Error: $error"),
@@ -39,7 +44,9 @@ class VoiceAssistant {
         onResult: (result) {
           if (result.finalResult) {
             String spokenText = result.recognizedWords;
-            onCommandRecognized?.call(spokenText); // Send command to HomeScreen
+            print("Recognized Speech: $spokenText");
+            processCommand(spokenText);
+            stopListening();
           }
         },
       );
@@ -56,15 +63,31 @@ class VoiceAssistant {
   }
 
   void startWakeWordDetection() {
-    _porcupineManager?.start();
+    if (!_isWakeWordActive) {
+      _porcupineManager?.start();
+      _isWakeWordActive = true;
+    }
   }
 
   void stopWakeWordDetection() {
-    _porcupineManager?.stop();
+    if (_isWakeWordActive) {
+      _porcupineManager?.stop();
+      _isWakeWordActive = false;
+    }
   }
 
   void dispose() {
     _porcupineManager?.delete();
     stopListening();
+    stopWakeWordDetection();
+  }
+
+  // **New Method to Process Commands**
+  void processCommand(String command) {
+    print("Processing Command: $command");
+
+    if (onCommandRecognized != null) {
+      onCommandRecognized!(command);
+    }
   }
 }

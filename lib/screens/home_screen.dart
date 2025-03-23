@@ -12,6 +12,8 @@ import 'profile_page.dart';
 import '../language_provider.dart';
 import '../features/call_feature.dart';
 import '../features/voice_assistant.dart';  // Import VoiceAssistant class
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -85,13 +87,46 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  void _handleVoiceCommand(String command) {
-    // TODO: Implement logic to send the command to the ML backend for intent detection.
-    // For now, this is just a placeholder.
+  void _handleVoiceCommand(String command) async {
     print("Recognized Command: $command");
 
-    // Example: You can add logic here to send the command to your ML backend.
-    // Once the intent is determined, you can handle navigation or other actions.
+    // Send the command to the ML backend for intent detection
+    final response = await http.post(
+      Uri.parse("http://192.168.0.101:3000/analyze-transcript"), // Replace with your actual API URL
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({"transcript": command}),
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      String intent = data["intent"];
+      String name = data["parameters"]["name"] ?? "";
+      int amount = data["parameters"]["amount"] ?? 0;
+      String clarification = data["clarification_message"] ?? "";
+
+      print("Intent: $intent, Name: $name, Amount: $amount");
+
+      // Handle navigation based on detected intent
+      if (intent == "make_payment" && name.isNotEmpty && amount > 0) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => MakePaymentPage(name: name, amount: amount)),
+        );
+      } else if (intent == "check_balance") {
+        Navigator.push(context, MaterialPageRoute(builder: (context) => CheckBalancePage()));
+      } else if (intent == "add_bank") {
+        Navigator.push(context, MaterialPageRoute(builder: (context) => AddBankPage()));
+      } else if (intent == "check_history") {
+        Navigator.push(context, MaterialPageRoute(builder: (context) => HistoryPage()));
+      } else if (clarification.isNotEmpty) {
+        print("Clarification Needed: $clarification");
+        // Handle case where AI needs more input (e.g., missing amount)
+      } else {
+        print("Unknown command: $command");
+      }
+    } else {
+      print("Failed to process command: ${response.body}");
+    }
   }
 
   @override
@@ -239,17 +274,15 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
 
       // Floating Voice Assistant Button
-      floatingActionButton: isVoiceAssistantEnabled
-          ? FloatingActionButton(
-        onPressed: () {
-          // TODO: Implement logic for manual mic button press.
-          // For now, this just starts listening.
-          _voiceAssistant.startListening();
-        },
-        child: Icon(Icons.mic, size: 30),
-        backgroundColor: Colors.blue,
-      )
-          : null,
+        floatingActionButton: isVoiceAssistantEnabled
+            ? FloatingActionButton(
+          onPressed: () {
+            _voiceAssistant.startListening();
+          },
+          child: Icon(Icons.mic, size: 30),
+          backgroundColor: Colors.blue,
+        )
+            : null,
     );
   }
 }

@@ -49,6 +49,7 @@ dependencies:
   porcupine_flutter: ^3.0.4
   path_provider: ^2.1.5
   permission_handler: ^11.4.0
+  flutter_dotenv: ^5.2.1
 
 
 dev_dependencies:
@@ -71,6 +72,7 @@ flutter:
     - assets/profile_picture.jpg
     - assets/voice_pay.jpg
     - assets/Hey-V-pay_en_android_v3_0_0.ppn
+    - assets/.env
 
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in

@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 import 'screens/login_screen.dart';
 import 'screens/home_screen.dart';
@@ -13,6 +14,12 @@ import 'features/call_feature.dart';  // Fraud Warning Feature
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  // ✅ Load the .env file
+  try {
+    await dotenv.load(fileName: "assets/.env");
+  } catch (e) {
+    print("⚠️ Error loading .env file: $e");
+  }
 
   // Initialize Firebase with error handling
   try {
