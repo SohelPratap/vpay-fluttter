@@ -2,7 +2,6 @@ require('dotenv').config({ path: '../assets/.env' });
 const express = require('express');
 const mysql = require('mysql2');
 const bodyParser = require('body-parser');
-const fetch = require('node-fetch');  // Required for API calls
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -99,46 +98,45 @@ app.get('/fetch-profile/:phoneNumber', (req, res) => {
     });
 });
 
-// Route to analyze transcript using AI
+// Route to analyze voice transcript using Mistral AI
 app.post('/analyze-transcript', async (req, res) => {
     try {
-        const API_KEY = process.env.AI_API_KEY;
         const { transcript } = req.body;
         if (!transcript) return res.status(400).json({ error: "Transcript is required" });
 
-        const PROMPT_TEMPLATE = `STRICTLY respond in this JSON format:
-        {{
+        const prompt = `STRICTLY respond in this JSON format:
+        {
           "intent": "make_payment|check_balance|check_history",
-          "parameters": {{
+          "parameters": {
             "name": "(string)",
             "amount": (number)
-          }},
+          },
           "clarification_message": "(string)"
-        }}
+        }
 
         Examples:
         1. Command: "Send ₹500 to Ravi"
-        Response: {{"intent":"make_payment","parameters":{{"name":"Ravi","amount":500}},"clarification_message":""}}
+        Response: {"intent":"make_payment","parameters":{"name":"Ravi","amount":500},"clarification_message":""}
 
         2. Command: "Check balance"
-        Response: {{"intent":"check_balance","parameters":{{"name":"","amount":""}},"clarification_message":""}}
+        Response: {"intent":"check_balance","parameters":{"name":"","amount":""},"clarification_message":""}
 
         3. Command: "Wire money to colleague"
-        Response: {{"intent":"make_payment","parameters":{{"name":"colleague","amount":""}},"clarification_message":"How much would you like to send to colleague?"}}
+        Response: {"intent":"make_payment","parameters":{"name":"colleague","amount":""},"clarification_message":"How much would you like to send to colleague?"}
 
         Now process: ${transcript}`;
 
         const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
             method: "POST",
             headers: {
-                "Authorization": `Bearer ${API_KEY}`,
+                "Authorization": `Bearer ${process.env.OPENROUTER_API_KEY}`,
                 "Content-Type": "application/json"
             },
             body: JSON.stringify({
-                model: "google/gemini-2.0-pro-exp-02-05:free",
-                messages: [{ role: "user", content: PROMPT_TEMPLATE }],
-                temperature: 0,
-                max_tokens: 200
+                "model": "mistralai/mistral-small-3.1-24b-instruct:free",
+                "messages": [{ role: "user", content: [{ "type": "text", "text": prompt }] }],
+                "temperature": 0,
+                "max_tokens": 200
             })
         });
 
