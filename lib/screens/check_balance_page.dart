@@ -2,6 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class CheckBalancePage extends StatelessWidget {
+  final String userName;
+
+  const CheckBalancePage({Key? key, required this.userName}) : super(key: key);
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -10,8 +14,9 @@ class CheckBalancePage extends StatelessWidget {
       ),
       body: Center(
         child: Text(
-          AppLocalizations.of(context)!.inside_check_balance,
+          "Checking balance for $userName.",
           style: TextStyle(fontSize: 18),
+          textAlign: TextAlign.center,
         ),
       ),
     );

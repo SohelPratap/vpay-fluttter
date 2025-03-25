@@ -111,11 +111,14 @@ class _HomeScreenState extends State<HomeScreen> {
 
         // Navigate based on intent
         if (intent == "make_payment") {
+          await _voiceAssistant.speak("You will send ₹${amount} to ${name}.");
           Navigator.push(context, MaterialPageRoute(builder: (context) => MakePaymentPage(name: name, amount: amount!.toInt())));
         } else if (intent == "check_balance") {
-          Navigator.push(context, MaterialPageRoute(builder: (context) => CheckBalancePage()));
+          await _voiceAssistant.speak("Now proceeding to check balance for ${name}.");
+          Navigator.push(context, MaterialPageRoute(builder: (context) => CheckBalancePage(userName: name)));
         } else if (intent == "check_history") {
-          Navigator.push(context, MaterialPageRoute(builder: (context) => HistoryPage()));
+          await _voiceAssistant.speak("Now proceeding to view history for ${name}.");
+          Navigator.push(context, MaterialPageRoute(builder: (context) => HistoryPage(userName: name)));
         } else {
           await _voiceAssistant.speak("I didn't understand that command.");
         }
@@ -253,7 +256,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     label: AppLocalizations.of(context)!.check_balance,
                     icon: Icons.account_balance_wallet,
                     onTap: () {
-                      Navigator.push(context, MaterialPageRoute(builder: (context) => CheckBalancePage()));
+                      Navigator.push(context, MaterialPageRoute(builder: (context) => CheckBalancePage(userName: userName)));
                     },
                   ),
                   PaymentButton(
@@ -267,7 +270,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     label: AppLocalizations.of(context)!.history,
                     icon: Icons.history,
                     onTap: () {
-                      Navigator.push(context, MaterialPageRoute(builder: (context) => HistoryPage()));
+                      Navigator.push(context, MaterialPageRoute(builder: (context) => HistoryPage(userName: userName)));
                     },
                   ),
                 ],
