@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:porcupine_flutter/porcupine_manager.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
-import '../screens/micoverlay.dart'; // Import the MicOverlay
 
 class VoiceAssistant {
   PorcupineManager? _porcupineManager;
@@ -70,17 +69,11 @@ class VoiceAssistant {
     _isListening = true;
     print("Starting speech recognition...");
 
-    // Ensure overlay appears when "Hey VPay" is detected
-    if (context.mounted) {
-      showMicOverlay();
-    }
-
     _speech.listen(
       onResult: (result) {
         if (result.finalResult) {
           String spokenText = result.recognizedWords;
           print("Recognized Speech: $spokenText");
-          hideMicOverlay(); // Hide mic overlay when done
           processCommand(spokenText);
           stopListening();
         }
@@ -95,8 +88,6 @@ class VoiceAssistant {
       _speech.stop();
       _isListening = false;
       print("Listening stopped. Restarting wakeword detection...");
-
-      hideMicOverlay(); // Ensure mic overlay is hidden
 
       Future.delayed(Duration(seconds: 1), () {
         print("Restarting wakeword detection...");
@@ -138,20 +129,6 @@ class VoiceAssistant {
       onCommandRecognized!(command);
     } else {
       print("Warning: No callback assigned to handle command.");
-    }
-  }
-
-  void showMicOverlay() {
-    print("🎤 Mic is active...");
-    if (context.mounted) {
-      _isListening = true;
-    }
-  }
-
-  void hideMicOverlay() {
-    print("🎤 Mic stopped listening.");
-    if (context.mounted) {
-      _isListening = false;
     }
   }
 }

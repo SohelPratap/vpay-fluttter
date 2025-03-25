@@ -14,7 +14,6 @@ import '../features/call_feature.dart';
 import '../features/voice_assistant.dart';  // Import VoiceAssistant class
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'micoverlay.dart'; // Import MicOverlay class
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -28,7 +27,6 @@ class _HomeScreenState extends State<HomeScreen> {
   bool isVoiceAssistantEnabled = true; // Default enabled
   late CallFeature _callFeature;
   late VoiceAssistant _voiceAssistant;
-  bool _isListening = false; // Track listening state
 
   @override
   void initState() {
@@ -84,7 +82,6 @@ class _HomeScreenState extends State<HomeScreen> {
       _voiceAssistant.initializeWakeword(_handleVoiceCommand);
     } else {
       _voiceAssistant.stopWakeWordDetection();
-      _voiceAssistant.stopListening();
     }
   }
 
@@ -113,22 +110,6 @@ class _HomeScreenState extends State<HomeScreen> {
         );
       },
     );
-  }
-
-  void showMicOverlay() {
-    setState(() {
-      _isListening = true;
-    });
-    print("🎤 Mic is active...");
-  }
-
-  void hideMicOverlay() {
-    print("🎤 Mic stopped listening.");
-    if (Navigator.canPop(context)) {
-      Navigator.pop(context);
-    } else {
-      print("No active overlay to close.");
-    }
   }
 
   @override
@@ -281,9 +262,6 @@ class _HomeScreenState extends State<HomeScreen> {
           floatingActionButton: isVoiceAssistantEnabled
               ? FloatingActionButton(
                   onPressed: () {
-                    setState(() {
-                      _isListening = true; // Ensure state updates for overlay
-                    });
                     _voiceAssistant.startListening();
                   },
                   child: Icon(Icons.mic, size: 30),
@@ -291,17 +269,9 @@ class _HomeScreenState extends State<HomeScreen> {
                 )
               : null,
 
-          // Show MicOverlay if listening
+          // Floating Action Button Location
           floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
         ),
-
-        // Display overlay directly on the main screen when listening
-        if (_isListening)
-          Positioned(
-            bottom: 100,
-            left: MediaQuery.of(context).size.width / 2 - 40,
-            child: MicOverlay(isListening: _isListening),
-          ),
       ],
     );
   }
