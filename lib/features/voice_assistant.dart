@@ -72,7 +72,7 @@ class VoiceAssistant {
     print("Starting speech recognition...");
 
     // Make the assistant respond
-    await _speak("How can I help you?");
+    await speak("How can I help you?");
 
     _speech.listen(
       onResult: (result) {
@@ -88,7 +88,7 @@ class VoiceAssistant {
     );
   }
 
-  Future<void> _speak(String text) async {
+  Future<void> speak(String text) async {
     await _tts.setLanguage("en-US");
     await _tts.setSpeechRate(0.5);
     await _tts.speak(text);

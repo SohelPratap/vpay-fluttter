@@ -14,6 +14,7 @@ import '../features/call_feature.dart';
 import '../features/voice_assistant.dart';  // Import VoiceAssistant class
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -87,29 +88,45 @@ class _HomeScreenState extends State<HomeScreen> {
 
   void _handleVoiceCommand(String command) async {
     print("Received Voice Command: $command");
+    final String backendUrl = dotenv.env['API_BASE_URL'] ?? 'http://localhost:5000';
 
-    // Show a pop-up indicating voice processing
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Row(
-            children: [
-              Icon(Icons.mic, color: Colors.blue),
-              SizedBox(width: 10),
-              Text("Voice Command")
-            ],
-          ),
-          content: Text(command),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text("OK"),
-            ),
-          ],
-        );
-      },
-    );
+    try {
+      final response = await http.post(
+        Uri.parse("$backendUrl/analyze-transcript"),
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode({"transcript": command}),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        String intent = data["intent"];
+        String name = data["parameters"]["name"] ?? "";
+        double? amount = data["parameters"]["amount"]?.toDouble();
+        String clarificationMessage = data["clarification_message"] ?? "";
+
+        if (clarificationMessage.isNotEmpty) {
+          await _voiceAssistant.speak(clarificationMessage);
+          return;
+        }
+
+        // Navigate based on intent
+        if (intent == "make_payment") {
+          Navigator.push(context, MaterialPageRoute(builder: (context) => MakePaymentPage(name: name, amount: amount!.toInt())));
+        } else if (intent == "check_balance") {
+          Navigator.push(context, MaterialPageRoute(builder: (context) => CheckBalancePage()));
+        } else if (intent == "check_history") {
+          Navigator.push(context, MaterialPageRoute(builder: (context) => HistoryPage()));
+        } else {
+          await _voiceAssistant.speak("I didn't understand that command.");
+        }
+      } else {
+        print("Error: ${response.body}");
+        await _voiceAssistant.speak("Sorry, I couldn't process your request.");
+      }
+    } catch (e) {
+      print("Request Error: $e");
+      await _voiceAssistant.speak("There was an issue processing your request.");
+    }
   }
 
   @override
@@ -229,7 +246,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     label: AppLocalizations.of(context)!.make_payment,
                     icon: Icons.payment,
                     onTap: () {
-                      Navigator.push(context, MaterialPageRoute(builder: (context) => MakePaymentPage()));
+                      Navigator.push(context, MaterialPageRoute(builder: (context) => MakePaymentPage(name: "", amount: 0)));
                     },
                   ),
                   PaymentButton(
