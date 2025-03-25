@@ -69,7 +69,11 @@ class VoiceAssistant {
 
     _isListening = true;
     print("Starting speech recognition...");
-    showMicOverlay(); // Show mic overlay when listening starts
+
+    // Ensure overlay appears when "Hey VPay" is detected
+    if (context.mounted) {
+      showMicOverlay();
+    }
 
     _speech.listen(
       onResult: (result) {
@@ -139,19 +143,15 @@ class VoiceAssistant {
 
   void showMicOverlay() {
     print("🎤 Mic is active...");
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => MicOverlay(isListening: true),
-    );
+    if (context.mounted) {
+      _isListening = true;
+    }
   }
 
   void hideMicOverlay() {
     print("🎤 Mic stopped listening.");
-    if (Navigator.canPop(context)) {
-      Navigator.pop(context);
-    } else {
-      print("No active overlay to close.");
+    if (context.mounted) {
+      _isListening = false;
     }
   }
 }

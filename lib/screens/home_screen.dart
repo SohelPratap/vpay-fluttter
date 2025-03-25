@@ -120,11 +120,6 @@ class _HomeScreenState extends State<HomeScreen> {
       _isListening = true;
     });
     print("🎤 Mic is active...");
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => MicOverlay(isListening: true),
-    );
   }
 
   void hideMicOverlay() {
@@ -138,163 +133,176 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      key: _scaffoldKey,
-      appBar: AppBar(
-        leading: Row(
-          children: [
-            Expanded(
-              child: IconButton(
-                icon: Icon(Icons.menu, size: 30),
-                onPressed: () {
-                  _scaffoldKey.currentState?.openDrawer();
-                },
-              ),
-            ),
-            Expanded(
-              child: IconButton(
-                icon: Icon(Icons.qr_code_scanner, size: 30),
-                onPressed: () {
-                  // QR scanner functionality
-                },
-              ),
-            ),
-          ],
-        ),
-        title: Text(
-          'Voice Pay',
-          style: TextStyle(color: Colors.transparent),
-        ),
-        centerTitle: true,
-        actions: [
-          IconButton(
-            icon: Icon(Icons.account_circle, size: 35),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => ProfilePage()),
-              );
-            },
-          ),
-        ],
-      ),
-
-      // Drawer with Language Selection, Fraud Warning Toggle, and Voice Assistant Toggle
-      drawer: Drawer(
-        child: ListView(
-          padding: EdgeInsets.zero,
-          children: [
-            DrawerHeader(
-              decoration: BoxDecoration(color: Colors.blue),
-              child: Text(
-                "Settings",
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
-              ),
-            ),
-            ListTile(
-              title: Text("English"),
-              onTap: () {
-                context.read<LanguageProvider>().changeLanguage('en');
-                Navigator.pop(context);
-              },
-            ),
-            ListTile(
-              title: Text("हिन्दी"),
-              onTap: () {
-                context.read<LanguageProvider>().changeLanguage('hi');
-                Navigator.pop(context);
-              },
-            ),
-            Divider(),
-            SwitchListTile(
-              title: Text("Fraud Call Warning"),
-              value: isFraudWarningEnabled,
-              onChanged: _toggleFraudWarning,
-            ),
-            SwitchListTile(
-              title: Text("Voice Assistant"),
-              value: isVoiceAssistantEnabled,
-              onChanged: _toggleVoiceAssistant,
-            ),
-          ],
-        ),
-      ),
-
-      body: SingleChildScrollView(
-        child: Center(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              SizedBox(height: 16),
-              Text(
-                '${AppLocalizations.of(context)!.welcome}, $userName 👋',
-                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-                textAlign: TextAlign.center,
-              ),
-              SizedBox(height: 16),
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 16.0),
-                child: Image.asset(
-                  'assets/voice_pay.jpg',
-                  height: 190,
-                  width: double.infinity,
-                  fit: BoxFit.cover,
+    return Stack(
+      children: [
+        Scaffold(
+          key: _scaffoldKey,
+          appBar: AppBar(
+            leading: Row(
+              children: [
+                Expanded(
+                  child: IconButton(
+                    icon: Icon(Icons.menu, size: 30),
+                    onPressed: () {
+                      _scaffoldKey.currentState?.openDrawer();
+                    },
+                  ),
                 ),
-              ),
-              Text(
-                AppLocalizations.of(context)!.note,
-                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-                textAlign: TextAlign.center,
-              ),
-              SizedBox(height: 20),
-              PaymentButton(
-                label: AppLocalizations.of(context)!.make_payment,
-                icon: Icons.payment,
-                onTap: () {
-                  Navigator.push(context, MaterialPageRoute(builder: (context) => MakePaymentPage()));
-                },
-              ),
-              PaymentButton(
-                label: AppLocalizations.of(context)!.check_balance,
-                icon: Icons.account_balance_wallet,
-                onTap: () {
-                  Navigator.push(context, MaterialPageRoute(builder: (context) => CheckBalancePage()));
-                },
-              ),
-              PaymentButton(
-                label: AppLocalizations.of(context)!.add_bank,
-                icon: Icons.account_balance,
-                onTap: () {
-                  Navigator.push(context, MaterialPageRoute(builder: (context) => AddBankPage()));
-                },
-              ),
-              PaymentButton(
-                label: AppLocalizations.of(context)!.history,
-                icon: Icons.history,
-                onTap: () {
-                  Navigator.push(context, MaterialPageRoute(builder: (context) => HistoryPage()));
+                Expanded(
+                  child: IconButton(
+                    icon: Icon(Icons.qr_code_scanner, size: 30),
+                    onPressed: () {
+                      // QR scanner functionality
+                    },
+                  ),
+                ),
+              ],
+            ),
+            title: Text(
+              'Voice Pay',
+              style: TextStyle(color: Colors.transparent),
+            ),
+            centerTitle: true,
+            actions: [
+              IconButton(
+                icon: Icon(Icons.account_circle, size: 35),
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => ProfilePage()),
+                  );
                 },
               ),
             ],
           ),
+
+          // Drawer with Language Selection, Fraud Warning Toggle, and Voice Assistant Toggle
+          drawer: Drawer(
+            child: ListView(
+              padding: EdgeInsets.zero,
+              children: [
+                DrawerHeader(
+                  decoration: BoxDecoration(color: Colors.blue),
+                  child: Text(
+                    "Settings",
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
+                  ),
+                ),
+                ListTile(
+                  title: Text("English"),
+                  onTap: () {
+                    context.read<LanguageProvider>().changeLanguage('en');
+                    Navigator.pop(context);
+                  },
+                ),
+                ListTile(
+                  title: Text("हिन्दी"),
+                  onTap: () {
+                    context.read<LanguageProvider>().changeLanguage('hi');
+                    Navigator.pop(context);
+                  },
+                ),
+                Divider(),
+                SwitchListTile(
+                  title: Text("Fraud Call Warning"),
+                  value: isFraudWarningEnabled,
+                  onChanged: _toggleFraudWarning,
+                ),
+                SwitchListTile(
+                  title: Text("Voice Assistant"),
+                  value: isVoiceAssistantEnabled,
+                  onChanged: _toggleVoiceAssistant,
+                ),
+              ],
+            ),
+          ),
+
+          body: SingleChildScrollView(
+            child: Center(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  SizedBox(height: 16),
+                  Text(
+                    '${AppLocalizations.of(context)!.welcome}, $userName 👋',
+                    style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                    textAlign: TextAlign.center,
+                  ),
+                  SizedBox(height: 16),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 16.0),
+                    child: Image.asset(
+                      'assets/voice_pay.jpg',
+                      height: 190,
+                      width: double.infinity,
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                  Text(
+                    AppLocalizations.of(context)!.note,
+                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                    textAlign: TextAlign.center,
+                  ),
+                  SizedBox(height: 20),
+                  PaymentButton(
+                    label: AppLocalizations.of(context)!.make_payment,
+                    icon: Icons.payment,
+                    onTap: () {
+                      Navigator.push(context, MaterialPageRoute(builder: (context) => MakePaymentPage()));
+                    },
+                  ),
+                  PaymentButton(
+                    label: AppLocalizations.of(context)!.check_balance,
+                    icon: Icons.account_balance_wallet,
+                    onTap: () {
+                      Navigator.push(context, MaterialPageRoute(builder: (context) => CheckBalancePage()));
+                    },
+                  ),
+                  PaymentButton(
+                    label: AppLocalizations.of(context)!.add_bank,
+                    icon: Icons.account_balance,
+                    onTap: () {
+                      Navigator.push(context, MaterialPageRoute(builder: (context) => AddBankPage()));
+                    },
+                  ),
+                  PaymentButton(
+                    label: AppLocalizations.of(context)!.history,
+                    icon: Icons.history,
+                    onTap: () {
+                      Navigator.push(context, MaterialPageRoute(builder: (context) => HistoryPage()));
+                    },
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+          // Floating Voice Assistant Button
+          floatingActionButton: isVoiceAssistantEnabled
+              ? FloatingActionButton(
+                  onPressed: () {
+                    setState(() {
+                      _isListening = true; // Ensure state updates for overlay
+                    });
+                    _voiceAssistant.startListening();
+                  },
+                  child: Icon(Icons.mic, size: 30),
+                  backgroundColor: Colors.blue,
+                )
+              : null,
+
+          // Show MicOverlay if listening
+          floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
         ),
-      ),
 
-      // Floating Voice Assistant Button
-      floatingActionButton: isVoiceAssistantEnabled
-          ? FloatingActionButton(
-              onPressed: () {
-                _voiceAssistant.startListening();
-                showMicOverlay(); // Show mic overlay when listening starts
-              },
-              child: Icon(Icons.mic, size: 30),
-              backgroundColor: Colors.blue,
-            )
-          : null,
-
-      // Show MicOverlay if listening
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
-      bottomNavigationBar: _isListening ? MicOverlay(isListening: true) : SizedBox.shrink(),
+        // Display overlay directly on the main screen when listening
+        if (_isListening)
+          Positioned(
+            bottom: 100,
+            left: MediaQuery.of(context).size.width / 2 - 40,
+            child: MicOverlay(isListening: _isListening),
+          ),
+      ],
     );
   }
 }
