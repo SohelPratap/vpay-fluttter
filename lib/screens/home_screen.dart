@@ -100,8 +100,6 @@ class _HomeScreenState extends State<HomeScreen> {
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         String intent = data["intent"];
-        String name = data["parameters"]["name"] ?? "";
-        double? amount = data["parameters"]["amount"]?.toDouble();
         String clarificationMessage = data["clarification_message"] ?? "";
 
         if (clarificationMessage.isNotEmpty) {
@@ -111,14 +109,16 @@ class _HomeScreenState extends State<HomeScreen> {
 
         // Navigate based on intent
         if (intent == "make_payment") {
-          await _voiceAssistant.speak("You will send ₹${amount} to ${name}.");
+          String name = data["parameters"]["name"] ?? "";
+          double? amount = data["parameters"]["amount"]?.toDouble();
+          await _voiceAssistant.speak("You will send ₹${amount ?? 0} to ${name}.");
           Navigator.push(context, MaterialPageRoute(builder: (context) => MakePaymentPage(name: name, amount: amount!.toInt())));
         } else if (intent == "check_balance") {
-          await _voiceAssistant.speak("Now proceeding to check balance for ${name}.");
-          Navigator.push(context, MaterialPageRoute(builder: (context) => CheckBalancePage(userName: name)));
+          await _voiceAssistant.speak("Now proceeding to check balance.");
+          Navigator.push(context, MaterialPageRoute(builder: (context) => CheckBalancePage()));
         } else if (intent == "check_history") {
-          await _voiceAssistant.speak("Now proceeding to view history for ${name}.");
-          Navigator.push(context, MaterialPageRoute(builder: (context) => HistoryPage(userName: name)));
+          await _voiceAssistant.speak("Now proceeding to view history.");
+          Navigator.push(context, MaterialPageRoute(builder: (context) => HistoryPage()));
         } else {
           await _voiceAssistant.speak("I didn't understand that command.");
         }
@@ -256,7 +256,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     label: AppLocalizations.of(context)!.check_balance,
                     icon: Icons.account_balance_wallet,
                     onTap: () {
-                      Navigator.push(context, MaterialPageRoute(builder: (context) => CheckBalancePage(userName: userName)));
+                      Navigator.push(context, MaterialPageRoute(builder: (context) => CheckBalancePage()));
                     },
                   ),
                   PaymentButton(
@@ -270,7 +270,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     label: AppLocalizations.of(context)!.history,
                     icon: Icons.history,
                     onTap: () {
-                      Navigator.push(context, MaterialPageRoute(builder: (context) => HistoryPage(userName: userName)));
+                      Navigator.push(context, MaterialPageRoute(builder: (context) => HistoryPage()));
                     },
                   ),
                 ],
