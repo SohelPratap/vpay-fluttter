@@ -149,14 +149,6 @@ class _HomeScreenState extends State<HomeScreen> {
                     },
                   ),
                 ),
-                Expanded(
-                  child: IconButton(
-                    icon: Icon(Icons.qr_code_scanner, size: 30),
-                    onPressed: () {
-                      // QR scanner functionality
-                    },
-                  ),
-                ),
               ],
             ),
             title: Text(
@@ -278,16 +270,38 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
 
-          // Floating Voice Assistant Button
-          floatingActionButton: isVoiceAssistantEnabled
-              ? FloatingActionButton(
+          // Floating Action Button for QR Scanner and Voice Assistant
+          floatingActionButton: Stack(
+            alignment: Alignment.bottomCenter,
+            children: [
+              // QR Scanner in the bottom center
+              Positioned(
+                bottom: 16,
+                left: MediaQuery.of(context).size.width / 2 - 28, // Centered
+                child: FloatingActionButton(
                   onPressed: () {
-                    _voiceAssistant.startListening();
+                    // QR scanner functionality
                   },
-                  child: Icon(Icons.mic, size: 30),
-                  backgroundColor: Colors.blue,
-                )
-              : null,
+                  child: Icon(Icons.qr_code_scanner, size: 30),
+                  backgroundColor: Colors.green,
+                ),
+              ),
+
+              // Voice Assistant Mic Button moved to the right bottom
+              if (isVoiceAssistantEnabled)
+                Positioned(
+                  bottom: 16,
+                  right: 16,
+                  child: FloatingActionButton(
+                    onPressed: () {
+                      _voiceAssistant.startListening();
+                    },
+                    child: Icon(Icons.mic, size: 30),
+                    backgroundColor: Colors.blue,
+                  ),
+                ),
+            ],
+          ),
 
           // Floating Action Button Location
           floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
