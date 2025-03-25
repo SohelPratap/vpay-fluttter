@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:porcupine_flutter/porcupine_manager.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
+import '../screens/micoverlay.dart'; // Import the MicOverlay
 
 class VoiceAssistant {
   PorcupineManager? _porcupineManager;
@@ -10,9 +11,14 @@ class VoiceAssistant {
   bool _isListening = false;
   bool _isWakeWordActive = false;
   Function(String)? onCommandRecognized; // Callback for voice commands
+  BuildContext context; // Add context to the class
+
+  VoiceAssistant(this.context); // Constructor to initialize context
 
   Future<void> initializeWakeword(Function(String) onCommandRecognized) async {
+    print("Initializing wakeword detection...");
     this.onCommandRecognized = onCommandRecognized;
+    print("Wakeword detection initialized, waiting for 'Hey VPay'...");
 
     // ✅ Load values from `.env`
     final String accessKey = dotenv.env['PICOVOICE_ACCESS_KEY'] ?? '';
@@ -38,40 +44,72 @@ class VoiceAssistant {
   }
 
   Future<void> startListening() async {
-    if (_isListening) return; // Prevent multiple sessions
+    if (_isListening) return; // Prevent multiple activations
+
+    stopWakeWordDetection(); // Stop wake word detection while listening
+
     bool available = await _speech.initialize(
-      onStatus: (status) => print("Speech Status: $status"),
-      onError: (error) => print("Speech Error: $error"),
+      onStatus: (status) {
+        print("Speech Status: $status");
+        if (status == "notListening") {
+          print("Speech recognition stopped unexpectedly.");
+          stopListening(); // Ensure wake word detection restarts
+        }
+      },
+      onError: (error) {
+        print("Speech Error: $error");
+        stopListening(); // Ensure wake word detection restarts on error
+      },
     );
 
-    if (available) {
-      _isListening = true;
-      _speech.listen(
-        onResult: (result) {
-          if (result.finalResult) {
-            String spokenText = result.recognizedWords;
-            print("Recognized Speech: $spokenText");
-            processCommand(spokenText);
-            stopListening();
-          }
-        },
-      );
-    } else {
-      print("Speech recognition not available");
+    if (!available) {
+      print("Speech recognition is not available.");
+      return;
     }
+
+    _isListening = true;
+    print("Starting speech recognition...");
+    showMicOverlay(); // Show mic overlay when listening starts
+
+    _speech.listen(
+      onResult: (result) {
+        if (result.finalResult) {
+          String spokenText = result.recognizedWords;
+          print("Recognized Speech: $spokenText");
+          hideMicOverlay(); // Hide mic overlay when done
+          processCommand(spokenText);
+          stopListening();
+        }
+      },
+      listenFor: Duration(seconds: 10),
+      pauseFor: Duration(seconds: 3),
+    );
   }
 
   void stopListening() {
     if (_isListening) {
       _speech.stop();
       _isListening = false;
+      print("Listening stopped. Restarting wakeword detection...");
+
+      hideMicOverlay(); // Ensure mic overlay is hidden
+
+      Future.delayed(Duration(seconds: 1), () {
+        print("Restarting wakeword detection...");
+        startWakeWordDetection(); // Restart wake word detection after STT ends
+      });
     }
   }
 
   void startWakeWordDetection() {
     if (!_isWakeWordActive) {
-      _porcupineManager?.start();
-      _isWakeWordActive = true;
+      print("Restarting wakeword detection...");
+      try {
+        _porcupineManager?.start();
+        _isWakeWordActive = true;
+      } catch (e) {
+        print("Error restarting wake word detection: $e");
+      }
     }
   }
 
@@ -94,6 +132,26 @@ class VoiceAssistant {
 
     if (onCommandRecognized != null) {
       onCommandRecognized!(command);
+    } else {
+      print("Warning: No callback assigned to handle command.");
+    }
+  }
+
+  void showMicOverlay() {
+    print("🎤 Mic is active...");
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => MicOverlay(isListening: true),
+    );
+  }
+
+  void hideMicOverlay() {
+    print("🎤 Mic stopped listening.");
+    if (Navigator.canPop(context)) {
+      Navigator.pop(context);
+    } else {
+      print("No active overlay to close.");
     }
   }
 }

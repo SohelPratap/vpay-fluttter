@@ -14,6 +14,7 @@ import '../features/call_feature.dart';
 import '../features/voice_assistant.dart';  // Import VoiceAssistant class
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'micoverlay.dart'; // Import MicOverlay class
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -27,6 +28,7 @@ class _HomeScreenState extends State<HomeScreen> {
   bool isVoiceAssistantEnabled = true; // Default enabled
   late CallFeature _callFeature;
   late VoiceAssistant _voiceAssistant;
+  bool _isListening = false; // Track listening state
 
   @override
   void initState() {
@@ -37,7 +39,7 @@ class _HomeScreenState extends State<HomeScreen> {
     _loadVoiceAssistantState();
 
     // Initialize voice assistant
-    _voiceAssistant = VoiceAssistant();
+    _voiceAssistant = VoiceAssistant(context);
     if (isVoiceAssistantEnabled) {
       _voiceAssistant.initializeWakeword(_handleVoiceCommand);
     }
@@ -80,7 +82,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
     if (value) {
       _voiceAssistant.initializeWakeword(_handleVoiceCommand);
-      _voiceAssistant.startWakeWordDetection();
     } else {
       _voiceAssistant.stopWakeWordDetection();
       _voiceAssistant.stopListening();
@@ -88,44 +89,50 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _handleVoiceCommand(String command) async {
-    print("Recognized Command: $command");
+    print("Received Voice Command: $command");
 
-    // Send the command to the ML backend for intent detection
-    final response = await http.post(
-      Uri.parse("http://192.168.0.101:3000/analyze-transcript"), // Replace with your actual API URL
-      headers: {"Content-Type": "application/json"},
-      body: jsonEncode({"transcript": command}),
-    );
-
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-      String intent = data["intent"];
-      String name = data["parameters"]["name"] ?? "";
-      int amount = data["parameters"]["amount"] ?? 0;
-      String clarification = data["clarification_message"] ?? "";
-
-      print("Intent: $intent, Name: $name, Amount: $amount");
-
-      // Handle navigation based on detected intent
-      if (intent == "make_payment" && name.isNotEmpty && amount > 0) {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => MakePaymentPage(name: name, amount: amount)),
+    // Show a pop-up indicating voice processing
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Row(
+            children: [
+              Icon(Icons.mic, color: Colors.blue),
+              SizedBox(width: 10),
+              Text("Voice Command")
+            ],
+          ),
+          content: Text(command),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text("OK"),
+            ),
+          ],
         );
-      } else if (intent == "check_balance") {
-        Navigator.push(context, MaterialPageRoute(builder: (context) => CheckBalancePage()));
-      } else if (intent == "add_bank") {
-        Navigator.push(context, MaterialPageRoute(builder: (context) => AddBankPage()));
-      } else if (intent == "check_history") {
-        Navigator.push(context, MaterialPageRoute(builder: (context) => HistoryPage()));
-      } else if (clarification.isNotEmpty) {
-        print("Clarification Needed: $clarification");
-        // Handle case where AI needs more input (e.g., missing amount)
-      } else {
-        print("Unknown command: $command");
-      }
+      },
+    );
+  }
+
+  void showMicOverlay() {
+    setState(() {
+      _isListening = true;
+    });
+    print("🎤 Mic is active...");
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => MicOverlay(isListening: true),
+    );
+  }
+
+  void hideMicOverlay() {
+    print("🎤 Mic stopped listening.");
+    if (Navigator.canPop(context)) {
+      Navigator.pop(context);
     } else {
-      print("Failed to process command: ${response.body}");
+      print("No active overlay to close.");
     }
   }
 
@@ -274,15 +281,20 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
 
       // Floating Voice Assistant Button
-        floatingActionButton: isVoiceAssistantEnabled
-            ? FloatingActionButton(
-          onPressed: () {
-            _voiceAssistant.startListening();
-          },
-          child: Icon(Icons.mic, size: 30),
-          backgroundColor: Colors.blue,
-        )
-            : null,
+      floatingActionButton: isVoiceAssistantEnabled
+          ? FloatingActionButton(
+              onPressed: () {
+                _voiceAssistant.startListening();
+                showMicOverlay(); // Show mic overlay when listening starts
+              },
+              child: Icon(Icons.mic, size: 30),
+              backgroundColor: Colors.blue,
+            )
+          : null,
+
+      // Show MicOverlay if listening
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
+      bottomNavigationBar: _isListening ? MicOverlay(isListening: true) : SizedBox.shrink(),
     );
   }
 }
