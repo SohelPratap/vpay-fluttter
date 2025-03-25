@@ -3,10 +3,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:porcupine_flutter/porcupine_manager.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
+import 'package:flutter_tts/flutter_tts.dart';
 
 class VoiceAssistant {
   PorcupineManager? _porcupineManager;
   final stt.SpeechToText _speech = stt.SpeechToText();
+  final FlutterTts _tts = FlutterTts();
   bool _isListening = false;
   bool _isWakeWordActive = false;
   Function(String)? onCommandRecognized; // Callback for voice commands
@@ -69,6 +71,9 @@ class VoiceAssistant {
     _isListening = true;
     print("Starting speech recognition...");
 
+    // Make the assistant respond
+    await _speak("How can I help you?");
+
     _speech.listen(
       onResult: (result) {
         if (result.finalResult) {
@@ -81,6 +86,12 @@ class VoiceAssistant {
       listenFor: Duration(seconds: 10),
       pauseFor: Duration(seconds: 3),
     );
+  }
+
+  Future<void> _speak(String text) async {
+    await _tts.setLanguage("en-US");
+    await _tts.setSpeechRate(0.5);
+    await _tts.speak(text);
   }
 
   void stopListening() {
